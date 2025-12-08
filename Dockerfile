@@ -11,7 +11,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy built jar from the build stage
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/lwjgl3/build/libs/WavesRemake-1.0.0.jar app.jar
 
 # Expose port Render will use
 EXPOSE 8080
