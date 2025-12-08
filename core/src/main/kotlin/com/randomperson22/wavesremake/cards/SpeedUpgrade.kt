@@ -11,7 +11,7 @@ object SpeedUpgrade : Card(
         val player = WaveManager.player
 
         // Increase speed by 0.5
-        player.speed *= 0.5f
+        player.speed *= 1.0f
 
         WaveManager.startNextWave()
     }
