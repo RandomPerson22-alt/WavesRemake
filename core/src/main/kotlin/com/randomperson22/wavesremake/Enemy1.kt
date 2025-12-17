@@ -12,7 +12,7 @@ class Enemy1(
     sprite1Texture = loadedAssets["enemy1.png"] ?: error("enemy1.png not loaded!"),
     sprite2Texture = loadedAssets["enemy1Walk.png"] ?: error("enemy1Walk.png not loaded!")
 ) {
-    override var moveSpeed = 100f
+    override var moveSpeed = 250f
     override var health = 5f
     override var damageAmount = 1.3f
 }

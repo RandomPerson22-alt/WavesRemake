@@ -14,29 +14,38 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 class Sword(
     private val player: Player,
     private val stage: Stage,
-    private val texture: Texture  // <-- pass the preloaded texture
+    private val texture: Texture
 ) : Actor() {
 
     private val shapeRenderer: ShapeRenderer? = if (DEBUG) ShapeRenderer() else null
     private val enemiesHitThisSwing = mutableSetOf<EnemyBase>()
     var isEquipped = false
-    private var radius = 40f
     var damage = 2.5f
-    private val hitboxWidth = 40f   // the actual size of the collider
-    private val hitboxHeight = 16f
+    var radius: Float = 65f
+
+    // Hitbox now matches the sprite size
     private var hitBox: Polygon = Polygon(floatArrayOf(
         0f, 0f,
-        hitboxWidth, 0f,
-        hitboxWidth, hitboxHeight,
-        0f, hitboxHeight
+        width, 0f,
+        width, height,
+        0f, height
     ))
 
     companion object { private const val DEBUG = true }
 
     init {
-        width = 40f
-        height = 16f
+        // Set your desired in-game size
+        width = 67f   // how big the sword appears in the game
+        height = 27f
         setOrigin(width / 2f, height / 2f)
+
+        // Hitbox matches the displayed size
+        hitBox = Polygon(floatArrayOf(
+            0f, 0f,
+            width, 0f,
+            width, height,
+            0f, height
+        ))
         hitBox.setOrigin(width / 2f, height / 2f)
     }
 
@@ -73,13 +82,11 @@ class Sword(
             if (actor is EnemyBase) {
                 val enemy = actor
                 if (Intersector.overlapConvexPolygons(hitBox, enemy.getHitPolygon())) {
-                    // Only apply damage if enemy not already hit in this swing
                     if (!enemiesHitThisSwing.contains(enemy)) {
                         enemy.takeDamage(damage)
                         enemiesHitThisSwing.add(enemy)
                     }
                 } else {
-                    // Sword no longer touching enemy, allow it to take damage again next touch
                     enemiesHitThisSwing.remove(enemy)
                 }
             }

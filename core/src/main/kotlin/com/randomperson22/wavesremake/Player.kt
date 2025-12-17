@@ -28,7 +28,7 @@ class Player(
     private var idleFrame = 0
     private var moving = false
     private var hasSword = false
-    var speed = 200f // default movement speed
+    var speed = 500f // default movement speed
 
     private data class DashState(val dir: Vector2, val remaining: Float)
 
@@ -40,8 +40,8 @@ class Player(
     private val maxDashDistance = 150f
 
     init {
-        width = 23f
-        height = 25f
+        width = 40f
+        height = 43f
         setPosition(100f, 100f)
     }
 
@@ -113,8 +113,6 @@ class Player(
         sword.isEquipped = true
         println("Player equipped the sword!")
     }
-
-    fun hasSword(): Boolean = hasSword
 
     override fun draw(batch: Batch, parentAlpha: Float) {
         val currentFrame = if (moving) walkTextures[walkFrame] else stopTextures[idleFrame]

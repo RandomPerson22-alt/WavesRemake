@@ -159,39 +159,28 @@ class MainMenuScreen(private val game: Waves) : Screen {
     }
 
     override fun render(delta: Float) {
+        // Clear the screen
         ScreenUtils.clear(0f, 0.2f, 0f, 1f)
 
+        // Update the AssetManager; returns false until everything is loaded
         if (!AssetLoader.manager.update()) {
+            // Still loading → show the progress bar
             drawProgressBar(AssetLoader.manager.progress)
         } else if (!loadingFinished) {
+            // First frame after loading finishes
             loadingFinished = true
 
-            loadedTextures = hashMapOf<String, Texture>()
-
-            val files = listOf(
-                "PlayerWalk1.png",
-                "PlayerWalk2.png",
-                "PlayerWalk3.png",
-                "PlayerWalk4.png",
-                "PlayerWalk5.png",
-                "PlayerWalk6.png",
-                "PlayerStop1.png",
-                "PlayerStop2.png",
-                "EasyModeBG.png",
-                "WavesRemakeTitle.png",
-                "pausebutton.png",
-                "sword.png",
-                "enemy1.png",
-                "enemy1Walk.png"
-            )
-
-            for (file in files) {
+            // Grab all textures from AssetManager into a map
+            loadedTextures = hashMapOf()
+            for (file in AssetLoader.texturesToLoad) {
                 loadedTextures[file] = AssetLoader.manager.get(file, Texture::class.java)
             }
 
+            // Start any animations or transitions
             startAnimations()
         }
 
+        // Update and draw the stage/UI
         stage.act(delta)
         stage.draw()
     }

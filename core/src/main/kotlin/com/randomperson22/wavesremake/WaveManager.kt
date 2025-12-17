@@ -47,7 +47,9 @@ object WaveManager {
         }
 
         val swordButton = TextButton("Sword", skin)
+
         initialCardPanel.add(swordButton).pad(20f).width(150f).height(50f)
+        initialCardPanel.row()
 
         swordButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
@@ -60,7 +62,9 @@ object WaveManager {
 
     private fun selectInitialWeapon(weapon: String) {
         initialCardPanel.isVisible = false
-        player.equipSword()
+        when (weapon) {
+            "Sword" -> player.equipSword()
+        }
         startNextWave()
     }
 

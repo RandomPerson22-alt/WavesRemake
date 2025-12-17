@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
@@ -16,7 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
-import com.badlogic.gdx.utils.viewport.FitViewport
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.randomperson22.wavesremake.cards.RangeUpgrade
 import com.randomperson22.wavesremake.cards.SharpnessUpgrade
 import com.randomperson22.wavesremake.cards.SpeedUpgrade
@@ -34,28 +33,33 @@ class EasyMode(
     private lateinit var background: Texture
     private val shapeRenderer = ShapeRenderer()
     private lateinit var spawnPoints: Array<FloatArray>
-
     private lateinit var pauseButton: ImageButton
     private lateinit var pauseMenuTable: Table
-
-    private val VIRTUAL_WIDTH = 800f
-    private val VIRTUAL_HEIGHT = 500f
+    private var vpWidth = 0f
+    private var vpHeight = 0f
+    private val minX get() = 0f
+    private val maxX get() = stage.viewport.worldWidth
+    private val minY get() = 0f
+    private val maxY get() = stage.viewport.worldHeight
 
     private var isPaused = false
 
 override fun show() {
 
-    // --- Background ---
-    background = loadedAssets["EasyModeBG.png"] ?: error("Texture EasyModeBG.png not found!")
-
     // --- Stage & Skin ---
-    stage = Stage(FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT))
+    stage = Stage(ScreenViewport()) // scales automatically to user screen size
     val skinHandle = Gdx.files.internal("ui/uiskin.json")
     skin = Skin(skinHandle)
 
+    // --- Background ---
+    background = loadedAssets["EasyModeBG.png"] ?: error("Texture EasyModeBG.png not found!")
+
+    vpWidth = stage.viewport.worldWidth
+    vpHeight = stage.viewport.worldHeight
+
 // --- Player ---
     player = Player(loadedAssets)
-    player.setPosition(VIRTUAL_WIDTH / 2f - player.width / 2f, 50f)
+    player.setPosition(vpWidth / 2f - player.width / 2f, 50f)
     stage.addActor(player)
 
 // --- Sword ---
@@ -75,10 +79,10 @@ override fun show() {
     val offset = 50f
     for (i in 0 until 10) {
         when (i % 4) {
-            0 -> { spawnPoints[i][0] = (0..VIRTUAL_WIDTH.toInt()).random().toFloat(); spawnPoints[i][1] = VIRTUAL_HEIGHT + offset }
-            1 -> { spawnPoints[i][0] = (0..VIRTUAL_WIDTH.toInt()).random().toFloat(); spawnPoints[i][1] = -offset }
-            2 -> { spawnPoints[i][0] = -offset; spawnPoints[i][1] = (0..VIRTUAL_HEIGHT.toInt()).random().toFloat() }
-            3 -> { spawnPoints[i][0] = VIRTUAL_WIDTH + offset; spawnPoints[i][1] = (0..VIRTUAL_HEIGHT.toInt()).random().toFloat() }
+            0 -> { spawnPoints[i][0] = (0..vpWidth.toInt()).random().toFloat(); spawnPoints[i][1] = vpHeight + offset }
+            1 -> { spawnPoints[i][0] = (0..vpWidth.toInt()).random().toFloat(); spawnPoints[i][1] = -offset }
+            2 -> { spawnPoints[i][0] = -offset; spawnPoints[i][1] = (0..vpHeight.toInt()).random().toFloat() }
+            3 -> { spawnPoints[i][0] = vpWidth + offset; spawnPoints[i][1] = (0..vpHeight.toInt()).random().toFloat() }
         }
     }
     val spawnVectors = spawnPoints.map { Vector2(it[0], it[1]) }.toTypedArray()
@@ -106,9 +110,11 @@ override fun show() {
     // --- Pause Button ---
     val pauseTexture = loadedAssets["pausebutton.png"] ?: error("Texture pausebutton.png not found!")
     pauseButton = ImageButton(TextureRegionDrawable(TextureRegion(pauseTexture)))
-    pauseButton.setPosition(VIRTUAL_WIDTH - pauseButton.width - 405f,
-                            VIRTUAL_HEIGHT - pauseButton.height + 345f)
-    pauseButton.setSize(50f, 50f)
+    pauseButton.setPosition(
+        0f + -2f, // distance from left edge
+        stage.viewport.worldHeight - pauseButton.height - -310f // distance from top
+    )
+    pauseButton.setSize(95f, 98f)
     stage.addActor(pauseButton)
     pauseButton.addListener(object : ClickListener() {
         override fun clicked(event: InputEvent?, x: Float, y: Float) {
@@ -117,17 +123,34 @@ override fun show() {
         }
     })
 
-    // --- Pause Menu ---
+// --- Pause Menu ---
     pauseMenuTable = Table().apply {
         setFillParent(true)
         center()
         isVisible = false
     }
+
     val leaveButton = TextButton("Go back To The Main Menu", skin)
     val returnButton = TextButton("Return", skin)
-    pauseMenuTable.add(leaveButton).pad(10f).row()
-    pauseMenuTable.add(returnButton).pad(10f).row()
+
+// Double the size of both buttons
+    val buttonWidth = leaveButton.prefWidth * 2
+    val buttonHeight = leaveButton.prefHeight * 2
+
+    pauseMenuTable.add(leaveButton)
+        .width(buttonWidth)
+        .height(buttonHeight)
+        .pad(10f)
+        .row()
+
+    pauseMenuTable.add(returnButton)
+        .width(buttonWidth)
+        .height(buttonHeight)
+        .pad(10f)
+        .row()
+
     stage.addActor(pauseMenuTable)
+
 
     leaveButton.addListener(object : ClickListener() {
         override fun clicked(event: InputEvent?, x: Float, y: Float) {
@@ -145,11 +168,6 @@ override fun show() {
     player.name = "player"
     sword.name = "sword"
 
-    // --- Load into fake editor ---
-    val allActors = mutableMapOf<String, Actor>()
-    allActors["player"] = player
-    allActors["sword"] = sword
-
     // --- Set input processor ---
     Gdx.input.inputProcessor = stage
 }
@@ -158,7 +176,7 @@ override fun show() {
         ScreenUtils.clear(0f, 0.2f, 0f, 1f)
 
         stage.batch.begin()
-        stage.batch.draw(background, 0f, 0f, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
+        stage.batch.draw(background, 0f, 0f, vpWidth, vpHeight)
         stage.batch.end()
 
         // Draw spawn points
@@ -170,7 +188,13 @@ override fun show() {
         }
         shapeRenderer.end()
 
-        if (!isPaused) stage.act(delta)
+        if (!isPaused) {
+            stage.act(delta)
+
+            // Clamp player position so they can't leave the play area
+            player.x = player.x.coerceIn(minX, maxX - player.width)
+            player.y = player.y.coerceIn(minY, maxY - player.height)
+        }
 
         stage.draw()
     }

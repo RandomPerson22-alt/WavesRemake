@@ -23,7 +23,7 @@ abstract class EnemyBase(
     // Animation
     protected var sprite1: Texture? = sprite1Texture
     protected var sprite2: Texture? = sprite2Texture
-    protected var switchInterval = 0.5f
+    protected var switchInterval = 0.25f
     protected var spriteTimer = 0f
     protected var usingFirstSprite = true
     private val hitBox: Polygon
@@ -32,8 +32,8 @@ abstract class EnemyBase(
     protected val bounds = Rectangle()
 
     init {
-        setWidth(24f)
-        setHeight(24f)
+        setWidth(35f)
+        setHeight(35f)
 
         hitBox = Polygon(
             floatArrayOf(
