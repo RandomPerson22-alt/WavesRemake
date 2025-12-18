@@ -1,5 +1,5 @@
 # Use a Java base image
-FROM openjdk:17-jdk-alpine
+FROM eclipse-temurin:17-jdk-alpine
 
 # Copy the fatJar into the container
 COPY build/libs/server-all.jar /app/server.jar
