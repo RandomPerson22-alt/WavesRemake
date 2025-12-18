@@ -41,22 +41,22 @@ application {
 }
 
 tasks.register("fatJar", Jar) {
-  group = "build"
-  archiveBaseName = "WavesRemake-server"
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    group = "build"
+    archiveFileName.set("server.jar") // <- fixed name
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-  manifest {
-    attributes(
-      "Main-Class": "com.randomperson22.wavesremake.server.ServerLauncherKt"
-    )
-  }
-
-  from sourceSets.main.output
-  dependsOn configurations.runtimeClasspath
-
-  from {
-    configurations.runtimeClasspath.collect {
-      it.isDirectory() ? it : zipTree(it)
+    manifest {
+        attributes(
+            "Main-Class": "com.randomperson22.wavesremake.server.ServerLauncherKt"
+        )
     }
-  }
+
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
 }
