@@ -3,6 +3,7 @@ package com.randomperson22.wavesremake.server
 import RoomCreateRequest
 import RoomJoinRequest
 import com.esotericsoftware.kryonet.*
+import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
@@ -21,12 +22,15 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
         }
 
         server.start()
-        server.bind(tcpPort, udpPort)
+        server.bind(
+            InetSocketAddress("0.0.0.0", tcpPort),
+            InetSocketAddress("0.0.0.0", udpPort)
+        )
         println("Server running on TCP:$tcpPort UDP:$udpPort")
 
         server.addListener(object : Listener() {
             override fun received(connection: Connection, obj: Any) {
-                when(obj) {
+                when (obj) {
                     is RoomCreateRequest -> handleRoomCreate(connection, obj)
                     is RoomJoinRequest -> handleRoomJoin(connection, obj)
                 }
