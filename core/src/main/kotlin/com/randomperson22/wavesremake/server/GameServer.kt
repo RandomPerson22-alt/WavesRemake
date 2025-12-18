@@ -8,7 +8,7 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
     private val server = Server()
     private val rooms = ConcurrentHashMap<String, Room>() // roomCode -> Room
 
-    init {
+    fun start() {
         // register shared packets
         server.kryo.apply {
             register(RoomCreateRequest::class.java)
@@ -33,33 +33,15 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
     }
 
     private fun generateRoomCode(): String {
-        return Random.nextInt(10000, 99999).toString() // random 5-digit code
+        return Random.nextInt(10000, 99999).toString()
     }
 
-    private fun handleRoomCreate(connection: Connection, request: RoomCreateRequest) {
-        val code = generateRoomCode()
-        val room = Room(code, connection)
-        rooms[code] = room
-        println("Room created: $code by ${request.playerName}")
-        connection.sendTCP(RoomCreateResponse(code, connection.id))
-    }
+    private fun handleRoomCreate(connection: Connection, request: RoomCreateRequest) { ... }
 
-    private fun handleRoomJoin(connection: Connection, request: RoomJoinRequest) {
-        val room = rooms[request.roomCode]
-        if (room != null) {
-            room.players[connection.id] = connection
-            println("${request.playerName} joined room ${request.roomCode}")
-            connection.sendTCP(RoomJoinResponse(true, "Joined room successfully", room.hostConnection.id))
-            // Notify host
-            room.hostConnection.sendTCP(RoomJoinResponse(true, "${request.playerName} joined your room"))
-        } else {
-            connection.sendTCP(RoomJoinResponse(false, "Room not found"))
-        }
-    }
+    private fun handleRoomJoin(connection: Connection, request: RoomJoinRequest) { ... }
 }
 
-// Room class to manage a single room
 class Room(val code: String, val hostConnection: Connection) {
-    val players = ConcurrentHashMap<Int, Connection>() // includes host
+    val players = ConcurrentHashMap<Int, Connection>()
     init { players[hostConnection.id] = hostConnection }
 }
