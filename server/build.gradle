@@ -1,0 +1,14 @@
+plugins {
+    kotlin("jvm") version "1.9.0"
+    application
+}
+
+dependencies {
+    implementation(project(":core"))
+    implementation("com.esotericsoftware.kryonet:kryonet:2.22.0-RC1")
+    implementation(kotlin("stdlib"))
+}
+
+application {
+    mainClass.set("com.randomperson22.wavesremake.server.ServerLauncherKt")
+}
