@@ -4,11 +4,24 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation("com.esotericsoftware.kryonet:kryonet:2.22.0-RC1")
+    implementation(project(":core"))               // Access GameServer.kt
+    implementation("com.esotericsoftware.kryonet:kryonet:2.22.0-RC1") // Or your version
     implementation(kotlin("stdlib"))
 }
 
 application {
     mainClass.set("com.randomperson22.wavesremake.server.ServerLauncherKt")
+}
+
+tasks.register<Jar>("fatJar") {
+    group = "build"
+    archiveBaseName.set("WavesRemake-server")
+    manifest {
+        attributes["Main-Class"] = "com.randomperson22.wavesremake.server.ServerLauncherKt"
+    }
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
+    })
 }
