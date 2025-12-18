@@ -1,20 +1,14 @@
-# ---- Build Stage ----
-FROM gradle:8-jdk17 AS build
+# Use OpenJDK 17
+FROM openjdk:17-jdk-alpine
+
+# Set working directory
 WORKDIR /app
 
-# Copy everything and build
-COPY . .
-RUN gradle build --no-daemon
+# Copy the server JAR
+COPY build/libs/WavesRemake-server.jar /app/WavesRemake-server.jar
 
-# ---- Run Stage ----
-FROM eclipse-temurin:17-jre
-WORKDIR /app
+# Expose the port your server listens on
+EXPOSE 54555
 
-# Copy built jar from the build stage
-COPY --from=build /app/lwjgl3/build/libs/WavesRemake-1.0.0.jar app.jar
-
-# Expose port Render will use
-EXPOSE 8080
-
-# Run the app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the server
+CMD ["java", "-jar", "WavesRemake-server.jar"]
