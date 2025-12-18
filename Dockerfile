@@ -1,34 +1,12 @@
-# ---- Build stage ----
-FROM gradle:8.3-jdk17 AS builder
+# Use a Java base image
+FROM openjdk:17-jdk-alpine
 
-# Set working directory
+# Copy the fatJar into the container
+COPY build/libs/server-all.jar /app/server.jar
 WORKDIR /app
 
-# Copy Gradle wrapper and build scripts first for caching
-COPY server/gradlew .
-COPY server/gradle/ gradle/
-COPY server/build.gradle .
-COPY server/settings.gradle .
-
-# Copy source code
-COPY server/src/ src/
-
-# Make sure gradlew is executable
-RUN chmod +x gradlew
-
-# Build the fat JAR
-RUN ./gradlew :server:fatJar --no-daemon
-
-# ---- Runtime stage ----
-FROM openjdk:17-jdk-slim
-
-WORKDIR /app
-
-# Copy fat JAR from builder stage
-COPY --from=builder /app/build/libs/server.jar ./server.jar
-
-# Expose server port (replace 8080 with your actual server port)
-EXPOSE 8080
+# Expose the port the server listens on
+EXPOSE 54555
 
 # Run the server
-ENTRYPOINT ["java", "-jar", "server.jar"]
+CMD ["java", "-jar", "server.jar"]

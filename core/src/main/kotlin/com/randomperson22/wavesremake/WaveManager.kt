@@ -63,7 +63,11 @@ object WaveManager {
     private fun selectInitialWeapon(weapon: String) {
         initialCardPanel.isVisible = false
         when (weapon) {
-            "Sword" -> player.equipSword()
+            "Sword" -> {
+                player.equipSword(player.sword!!) // pass the existing sword
+                player.sword!!.isEquipped = true
+                player.sword!!.isVisible = true
+            }
         }
         startNextWave()
     }

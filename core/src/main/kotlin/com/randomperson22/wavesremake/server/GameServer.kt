@@ -1,5 +1,7 @@
 package com.randomperson22.wavesremake.server
 
+import RoomCreateRequest
+import RoomJoinRequest
 import com.esotericsoftware.kryonet.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
@@ -36,9 +38,9 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
         return Random.nextInt(10000, 99999).toString()
     }
 
-    private fun handleRoomCreate(connection: Connection, request: RoomCreateRequest) { ... }
+    private fun handleRoomCreate(connection: Connection, request: RoomCreateRequest) { }
 
-    private fun handleRoomJoin(connection: Connection, request: RoomJoinRequest) { ... }
+    private fun handleRoomJoin(connection: Connection, request: RoomJoinRequest) { }
 }
 
 class Room(val code: String, val hostConnection: Connection) {

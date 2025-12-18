@@ -10,4 +10,6 @@ dependencies {
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
+  // https://mvnrepository.com/artifact/com.esotericsoftware/kryonet
+  implementation("com.esotericsoftware:kryonet:2.22.0-RC1")
 }

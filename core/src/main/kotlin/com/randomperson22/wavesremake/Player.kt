@@ -1,27 +1,27 @@
 package com.randomperson22.wavesremake
 
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.scenes.scene2d.Actor
 
-open class PlayerBase(
-    val id: Int,
-    var x: Float = 100f,
-    var y: Float = 100f,
-    var width: Float = 40f,
-    var height: Float = 43f
-) {
+open class Player(val id: Int) : Actor() {
     var maxHealth = 100f
     var health = maxHealth
     var speed = 500f
-
     var hasSword = false
     var moving = false
 
-    // Dash state for server logic if needed
+    var sword: Sword? = null
+
     data class DashState(val dir: Vector2, val remaining: Float)
     var dash: DashState? = null
 
+    fun equipSword(s: Sword) {
+        sword = s
+        hasSword = true
+    }
+
     // Position helper for server/client
-    fun setPosition(newX: Float, newY: Float) {
+    override fun setPosition(newX: Float, newY: Float) {
         x = newX
         y = newY
     }

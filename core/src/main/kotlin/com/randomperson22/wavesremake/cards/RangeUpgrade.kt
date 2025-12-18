@@ -12,7 +12,7 @@ object RangeUpgrade : Card(
         color = Color.DARK_GRAY
     ),
     onPick = Runnable {
-        val sword = WaveManager.player.sword
+        WaveManager.player.sword
         // === Make the sword 1.5x bigger here ===
         WaveManager.startNextWave()
     }

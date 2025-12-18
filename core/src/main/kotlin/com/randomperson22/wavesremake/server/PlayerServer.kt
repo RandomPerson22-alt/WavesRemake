@@ -1,13 +1,15 @@
 package com.randomperson22.wavesremake.server
 
 import com.badlogic.gdx.math.Vector2
-import com.randomperson22.wavesremake.shared.PlayerBase
+import com.randomperson22.wavesremake.Player
 
-class PlayerServer(
-    id: Int,
-    x: Float = 100f,
-    y: Float = 100f
-) : PlayerBase(id, x, y) {
+class PlayerServer(id: Int) : Player(id) {
+    init {
+        x = 100f
+        y = 100f
+        width = 40f
+        height = 43f
+    }
 
     // Apply input sent by the client (e.g., movement directions)
     fun applyInput(input: Map<String, Boolean>, delta: Float) {

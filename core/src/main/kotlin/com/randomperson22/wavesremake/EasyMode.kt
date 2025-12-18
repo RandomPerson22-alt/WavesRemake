@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.randomperson22.wavesremake.cards.RangeUpgrade
 import com.randomperson22.wavesremake.cards.SharpnessUpgrade
 import com.randomperson22.wavesremake.cards.SpeedUpgrade
+import com.randomperson22.wavesremake.client.PlayerClient
 import com.badlogic.gdx.utils.Array as GdxArray
 
 class EasyMode(
@@ -58,8 +59,14 @@ override fun show() {
     vpHeight = stage.viewport.worldHeight
 
 // --- Player ---
-    player = Player(loadedAssets)
-    player.setPosition(vpWidth / 2f - player.width / 2f, 50f)
+    player = PlayerClient(
+        id = 1,
+        loadedAssets = loadedAssets
+    ).apply {
+        width = 40f
+        height = 43f
+        setPosition(vpWidth / 2f - width / 2f, 50f)
+    }
     stage.addActor(player)
 
 // --- Sword ---

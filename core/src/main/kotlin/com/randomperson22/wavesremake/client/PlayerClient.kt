@@ -5,13 +5,15 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.scenes.scene2d.Actor
-import com.randomperson22.wavesremake.shared.PlayerBase
+import com.randomperson22.wavesremake.Player
 
-class PlayerClient(
-    id: Int,
-    loadedAssets: Map<String, Texture>
-) : Actor(), PlayerBase(id) {
+class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
+    init {
+        x = 100f
+        y = 100f
+        width = 40f
+        height = 43f
+    }
 
     private val walkTextures: Array<Texture> = Array(6) { i ->
         loadedAssets["PlayerWalk${i + 1}.png"] ?: error("PlayerWalk${i + 1}.png not loaded!")
@@ -57,7 +59,7 @@ class PlayerClient(
 
             if (remaining > 1f) {
                 dir.nor()
-                dash = PlayerBase.DashState(dir, remaining)
+                dash = Player.DashState(dir, remaining)
             }
         }
 
@@ -65,7 +67,7 @@ class PlayerClient(
             val moveAmount = minOf(dashSpeed * delta, it.remaining)
             moveBy(it.dir.x * moveAmount, it.dir.y * moveAmount)
             val remaining = it.remaining - moveAmount
-            dash = if (remaining > 0f) PlayerBase.DashState(it.dir, remaining) else null
+            dash = if (remaining > 0f) Player.DashState(it.dir, remaining) else null
             moving = true
         }
     }

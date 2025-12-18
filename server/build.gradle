@@ -1,27 +1,62 @@
-plugins {
-    kotlin("jvm") version "1.9.0"
-    application
+buildscript {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+    mavenLocal()
+  }
+  dependencies {
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+  }
+}
+
+apply plugin: "org.jetbrains.kotlin.jvm"
+apply plugin: "application"
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+repositories {
+  mavenCentral()
 }
 
 dependencies {
-    implementation(project(":core"))               // Access GameServer.kt
-    implementation("com.esotericsoftware.kryonet:kryonet:2.22.0-RC1") // Or your version
-    implementation(kotlin("stdlib"))
+  // Shared game logic & packets
+  implementation project(":core")
+
+// https://mvnrepository.com/artifact/com.esotericsoftware/kryonet
+  implementation("com.esotericsoftware:kryonet:2.22.0-RC1")
+
+  // Kotlin runtime
+  implementation "org.jetbrains.kotlin:kotlin-stdlib"
+
+  // Optional but useful
+  implementation "org.slf4j:slf4j-simple:2.0.13"
 }
 
 application {
-    mainClass.set("com.randomperson22.wavesremake.server.ServerLauncherKt")
+  mainClass = "com.randomperson22.wavesremake.server.ServerLauncherKt"
 }
 
-tasks.register<Jar>("fatJar") {
-    group = "build"
-    archiveBaseName.set("WavesRemake-server")
-    manifest {
-        attributes["Main-Class"] = "com.randomperson22.wavesremake.server.ServerLauncherKt"
+tasks.register("fatJar", Jar) {
+  group = "build"
+  archiveBaseName = "WavesRemake-server"
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+  manifest {
+    attributes(
+      "Main-Class": "com.randomperson22.wavesremake.server.ServerLauncherKt"
+    )
+  }
+
+  from sourceSets.main.output
+  dependsOn configurations.runtimeClasspath
+
+  from {
+    configurations.runtimeClasspath.collect {
+      it.isDirectory() ? it : zipTree(it)
     }
-    from(sourceSets.main.get().output)
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }
-    })
+  }
 }

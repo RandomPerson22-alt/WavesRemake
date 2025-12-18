@@ -11,8 +11,8 @@ object SharpnessUpgrade : Card(
     texture = AssetLoader.manager.get("SharpnessUpgrade.png"),
     onPick = Runnable {
         val sword = WaveManager.player.sword
-        sword.damage += 2.5f
-        Gdx.app.log("Card", "Sword damage increased to ${sword.damage}")
+        sword?.damage += 2.5f
+        Gdx.app.log("Card", "Sword damage increased to ${sword?.damage}")
         WaveManager.startNextWave()
     }
 )

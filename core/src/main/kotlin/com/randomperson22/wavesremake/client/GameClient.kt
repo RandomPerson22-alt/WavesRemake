@@ -1,5 +1,13 @@
 package com.randomperson22.wavesremake.client
 
+import RoomCreateRequest
+import RoomCreateResponse
+import RoomJoinRequest
+import RoomJoinResponse
+import com.esotericsoftware.kryonet.Client
+import com.esotericsoftware.kryonet.Connection
+import com.esotericsoftware.kryonet.Listener
+
 class GameClient(val hostAddress: String, val tcpPort: Int = 54555, val udpPort: Int = 54777) {
     private val client = Client()
 
