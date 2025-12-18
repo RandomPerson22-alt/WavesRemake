@@ -1,12 +1,12 @@
-# Use a Java base image
+# Stage 1: Build fatJar
+FROM gradle:8.3-jdk17-alpine AS builder
+WORKDIR /home/gradle/project
+COPY . .
+RUN gradle :server:fatJar --no-daemon
+
+# Stage 2: Runtime
 FROM eclipse-temurin:17-jdk-alpine
-
-# Copy the fatJar into the container
-COPY build/libs/server-all.jar /app/server.jar
 WORKDIR /app
-
-# Expose the port the server listens on
+COPY --from=builder /home/gradle/project/build/libs/WavesRemake-server.jar /app/server.jar
 EXPOSE 54555
-
-# Run the server
 CMD ["java", "-jar", "server.jar"]
