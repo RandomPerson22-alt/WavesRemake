@@ -3,15 +3,26 @@
 package com.randomperson22.wavesremake.server
 
 fun main() {
-    // Optional: you can set custom ports here if needed
-    val tcpPort = 54555
-    val udpPort = 54777
+    // Get port from environment or fallback to local default
+    val port = System.getenv("PORT")?.toInt() ?: 54555
 
-    // Create the server instance
-    val server = GameServer(tcpPort, udpPort)
+    // Create the server
+    val server = GameServer(port, port)  // TCP and UDP ports
 
-    // Start the server
-    server.start()
+    try {
+        // Bind to all interfaces so clients can connect externally
+        server.bind(port, port, "0.0.0.0")
+        server.start()
+        println("WavesRemake server started on TCP:$port UDP:$port")
+    } catch (e: Exception) {
+        println("Failed to start server: ${e.message}")
+        e.printStackTrace()
+        return
+    }
 
-    println("WavesRemake server started on TCP:$tcpPort UDP:$udpPort")
+    // Graceful shutdown
+    Runtime.getRuntime().addShutdownHook(Thread {
+        server.stop()
+        println("Server stopped")
+    })
 }
