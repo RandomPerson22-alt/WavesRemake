@@ -26,8 +26,7 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
             InetSocketAddress("0.0.0.0", tcpPort),
             InetSocketAddress("0.0.0.0", udpPort)
         )
-        private val logger = org.slf4j.LoggerFactory.getLogger(GameServer::class.java)
-        logger.info("Server running on TCP:$tcpPort UDP:$udpPort")
+        println("Server running on TCP:$tcpPort UDP:$udpPort")
 
         server.addListener(object : Listener() {
             override fun received(connection: Connection, obj: Any) {
