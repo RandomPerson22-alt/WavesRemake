@@ -21,7 +21,12 @@ class GameClient(val hostAddress: String, val tcpPort: Int = 54555, val udpPort:
         }
 
         client.start()
+    try {
         client.connect(5000, hostAddress, tcpPort, udpPort)
+    } catch (e: Exception) {
+        println("Failed to connect to server: ${e.message}")
+    }
+
 
         client.addListener(object : Listener() {
             override fun received(connection: Connection, obj: Any) {
