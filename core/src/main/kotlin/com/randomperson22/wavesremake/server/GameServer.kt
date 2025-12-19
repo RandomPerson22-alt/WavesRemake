@@ -38,9 +38,13 @@ class GameServer(val tcpPort: Int = 54555, val udpPort: Int = 54777) {
         })
     }
 
-    private fun generateRoomCode(): String {
-        return Random.nextInt(10000, 99999).toString()
-    }
+private fun generateRoomCode(): String {
+    var code: String
+    do {
+        code = Random.nextInt(10000, 99999).toString()
+    } while (rooms.containsKey(code))
+    return code
+}
 
     private fun handleRoomCreate(connection: Connection, request: RoomCreateRequest) { }
 
