@@ -18,6 +18,9 @@ java {
   }
 }
 
+apply plugin: "application"
+apply plugin: "org.jetbrains.kotlin.jvm"  // only if not applied in parent/subprojects
+
 repositories {
   mavenCentral()
 }
@@ -26,14 +29,17 @@ dependencies {
   // Shared game logic & packets
   implementation project(":core")
 
-// https://mvnrepository.com/artifact/com.esotericsoftware/kryonet
-  implementation("com.esotericsoftware:kryonet:2.22.0-RC1")
-
   // Kotlin runtime
   implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
   // Optional but useful
   implementation "org.slf4j:slf4j-simple:2.0.13"
+
+  // Web socket stuff
+  implementation "io.ktor:ktor-server-core:2.3.4"
+  implementation "io.ktor:ktor-server-netty:2.3.4"
+  implementation "io.ktor:ktor-server-websockets:2.3.4"
+  implementation "io.ktor:ktor-serialization-kotlinx-json:2.3.4"
 }
 
 application {

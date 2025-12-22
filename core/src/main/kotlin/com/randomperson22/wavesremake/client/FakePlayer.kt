@@ -1,26 +1,34 @@
 // core/src/main/kotlin/com/randomperson22/wavesremake/client/FakePlayer.kt
 package com.randomperson22.wavesremake.client
 
-import com.esotericsoftware.kryonet.Client
-import com.randomperson22.wavesremake.shared.SharedPackets
-import kotlin.concurrent.thread
-import java.util.concurrent.TimeUnit
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.coroutines.delay
 
-fun main() {
-    val client = Client()
-    client.start()
+@Serializable
+data class JoinPacket(val username: String)
 
-    // Register the packet class (must match server)
-    client.kryo.register(SharedPackets::class.java)
+fun main() = runBlocking {
+    val client = HttpClient(CIO) {
+        install(WebSockets)
+    }
 
-    thread {
-        client.connect(5000, "127.0.0.1", 54555, 54777)
+    client.webSocket(host = "127.0.0.1", port = 8080, path = "/ws") {
         println("Client connected, sending join request")
 
-        client.sendTCP(SharedPackets("Player1"))
+        val joinPacket = JoinPacket("Player1")
+        val jsonMessage = Json.encodeToString(joinPacket)
+        send(Frame.Text(jsonMessage))
 
-        // Keep client alive for a short while
-        TimeUnit.SECONDS.sleep(5)
-        client.stop()
+        // Keep client alive for a short while to receive messages
+        delay(5000)
     }
+
+    client.close()
 }

@@ -1,30 +1,51 @@
-//ServerLauncher.kt
-
+// ServerLauncher.kt
 package com.randomperson22.wavesremake.server
 
-import com.esotericsoftware.kryonet.Server
-import com.randomperson22.wavesremake.shared.SharedPackets
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.application.*
+import io.ktor.server.routing.routing
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import java.time.Duration
+
+@Serializable
+data class JoinPacket(val username: String)
 
 fun main() {
-    val server = Server()
-    server.start()
+    embeddedServer(Netty, port = 8080) {
+        install(WebSockets) {
+            pingPeriod = Duration.ofSeconds(15)
+            timeout = Duration.ofSeconds(30)
+        }
 
-    // Bind TCP + UDP ports
-    val tcpPort = 54555
-    val udpPort = 54777
-    server.bind(tcpPort, udpPort)
-    println("Server running on TCP:$tcpPort / UDP:$udpPort")
+        val clients = mutableSetOf<DefaultWebSocketServerSession>()
 
-    // ✅ Register the packet class
-    server.kryo.register(SharedPackets::class.java)
+        routing {
+            webSocket("/ws") {
+                clients.add(this)
+                try {
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+                            val text = frame.readText()
+                            val packet = Json.decodeFromString<JoinPacket>(text)
+                            println("${packet.username} joined")
 
-    server.addListener(object : com.esotericsoftware.kryonet.Listener() {
-        override fun received(connection: com.esotericsoftware.kryonet.Connection, obj: Any) {
-            if (obj is SharedPackets) {
-                println("${obj.username} joined")
+                            // Broadcast to all connected clients
+                            val msg = Json.encodeToString(packet)
+                            clients.forEach { it.send(msg) }
+                        }
+                    }
+                } catch (e: ClosedReceiveChannelException) {
+                    // Client disconnected
+                } finally {
+                    clients.remove(this)
+                }
             }
         }
-    })
-
-    Thread.currentThread().join()
+    }.start(wait = true)
 }
