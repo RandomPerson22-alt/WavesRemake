@@ -2,27 +2,29 @@
 
 package com.randomperson22.wavesremake.server
 
+import com.esotericsoftware.kryonet.Server
+import com.randomperson22.wavesremake.shared.SharedPackets
+
 fun main() {
-    // Get port from environment or fallback to local default
-    val port = System.getenv("PORT")?.toInt() ?: 54555
+    val server = Server()
+    server.start()
 
-    // Create the server
-    val server = GameServer(port, port)  // TCP and UDP ports
+    // Bind TCP + UDP ports
+    val tcpPort = 54555
+    val udpPort = 54777
+    server.bind(tcpPort, udpPort)
+    println("Server running on TCP:$tcpPort / UDP:$udpPort")
 
-    try {
-        // Bind to all interfaces so clients can connect externally
-        server.bind(port, port, "0.0.0.0")
-        server.start()
-        println("WavesRemake server started on TCP:$port UDP:$port")
-    } catch (e: Exception) {
-        println("Failed to start server: ${e.message}")
-        e.printStackTrace()
-        return
-    }
+    // ✅ Register the packet class
+    server.kryo.register(SharedPackets::class.java)
 
-    // Graceful shutdown
-    Runtime.getRuntime().addShutdownHook(Thread {
-        server.stop()
-        println("Server stopped")
+    server.addListener(object : com.esotericsoftware.kryonet.Listener() {
+        override fun received(connection: com.esotericsoftware.kryonet.Connection, obj: Any) {
+            if (obj is SharedPackets) {
+                println("${obj.username} joined")
+            }
+        }
     })
+
+    Thread.currentThread().join()
 }
