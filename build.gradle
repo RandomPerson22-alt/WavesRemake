@@ -8,7 +8,7 @@ buildscript {
   }
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-
+    classpath "org.jetbrains.kotlin:kotlin-serialization:1.9.10"
   }
 }
 
@@ -28,6 +28,7 @@ allprojects {
 configure(subprojects) {
   apply plugin: 'java-library'
   apply plugin: 'kotlin'
+  apply plugin: 'kotlinx-serialization'  // <--- add this
   java.sourceCompatibility = 17
 
   // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
