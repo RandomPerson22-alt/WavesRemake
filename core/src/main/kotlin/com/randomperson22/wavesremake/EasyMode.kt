@@ -1,6 +1,7 @@
 package com.randomperson22.wavesremake
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -20,6 +21,7 @@ import com.randomperson22.wavesremake.cards.RangeUpgrade
 import com.randomperson22.wavesremake.cards.SharpnessUpgrade
 import com.randomperson22.wavesremake.cards.SpeedUpgrade
 import com.randomperson22.wavesremake.client.PlayerClient
+import com.randomperson22.wavesremake.shared.connectToServer
 import com.badlogic.gdx.utils.Array as GdxArray
 
 class EasyMode(
@@ -28,7 +30,7 @@ class EasyMode(
 ) : Screen {
 
     private lateinit var stage: Stage
-    private lateinit var player: Player
+    private lateinit var player: PlayerClient
     private lateinit var skin: Skin
     private lateinit var sword: Sword
     private lateinit var background: Texture
@@ -42,7 +44,8 @@ class EasyMode(
     private val maxX get() = stage.viewport.worldWidth
     private val minY get() = 0f
     private val maxY get() = stage.viewport.worldHeight
-
+    private var connectedToServer = false
+    private val serverUrl = "wss://wavesremake.onrender.com/ws"
     private var isPaused = false
 
 override fun show() {
@@ -181,6 +184,11 @@ override fun show() {
 
     override fun render(delta: Float) {
         ScreenUtils.clear(0f, 0.2f, 0f, 1f)
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.L) && !connectedToServer) {
+            connectToServer(player, serverUrl)
+            connectedToServer = true
+        }
 
         stage.batch.begin()
         stage.batch.draw(background, 0f, 0f, vpWidth, vpHeight)

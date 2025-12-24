@@ -1,7 +1,5 @@
 package com.randomperson22.wavesremake
 
-import com.badlogic.gdx.Gdx
-
 class EnemyCounter {
 
     private var enemyCount = 0
@@ -19,13 +17,11 @@ class EnemyCounter {
     fun decreaseEnemyCount() {
         if (enemyCount <= 0) return
         enemyCount--
-        Gdx.app.log("EnemyCounter", "Enemy defeated! $enemyCount remaining")
         checkWaveComplete()
     }
 
     fun increaseEnemyCount() {
         enemyCount++
-        Gdx.app.log("EnemyCounter", "Enemy spawned! $enemyCount total now")
     }
 
     fun resetForNextWave() {
@@ -37,7 +33,6 @@ class EnemyCounter {
         if (enemyCount == 0 && !cardsShown) {
             cardsShown = true
             isScanning = false
-            Gdx.app.log("EnemyCounter", "Wave complete!")
             onWaveComplete?.invoke()
             showCardPanel?.invoke()
             CardSystem.showRandomCardPanel()

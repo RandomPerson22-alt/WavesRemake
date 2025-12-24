@@ -6,6 +6,13 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Vector2
 import com.randomperson22.wavesremake.Player
+import com.randomperson22.wavesremake.shared.InputPacket
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.websocket.send
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
     init {
@@ -31,6 +38,9 @@ class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
     private val idleFrameDuration = 0.5f
     private val dashSpeed = 600f
     private val maxDashDistance = 150f
+    var controlledByServer = false
+    var serverId: Int? = null
+    private var wsSession: DefaultClientWebSocketSession? = null
 
     init {
         width = 40f
@@ -38,14 +48,36 @@ class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
         setPosition(x, y)
     }
 
-    override fun act(delta: Float) {
-        super.act(delta)
-        moving = false
+    fun setWebSocket(session: DefaultClientWebSocketSession) {
+        wsSession = session
+    }
 
-        handleDash(delta)
-        if (dash == null) {
-            handleMovement(delta)
+    override fun act(delta: Float) {
+        if (controlledByServer) {
+            sendInputToServer()
+            // Only update animation based on the current moving state
             updateAnimation(delta)
+            return
+        }
+
+        super.act(delta)
+        handleDash(delta)
+        handleMovement(delta)
+        updateAnimation(delta)
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun sendInputToServer() {
+        if (wsSession == null || serverId == null) return
+        val keys = mapOf(
+            "W" to Gdx.input.isKeyPressed(Input.Keys.W),
+            "A" to Gdx.input.isKeyPressed(Input.Keys.A),
+            "S" to Gdx.input.isKeyPressed(Input.Keys.S),
+            "D" to Gdx.input.isKeyPressed(Input.Keys.D)
+        )
+        val packet = InputPacket(serverId!!, keys)
+        GlobalScope.launch {
+            wsSession?.send(Json.encodeToString(InputPacket.serializer(), packet))
         }
     }
 

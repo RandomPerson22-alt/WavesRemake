@@ -8,19 +8,16 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import java.time.Duration
-
-@Serializable
-data class JoinPacket(val username: String)
+import com.randomperson22.wavesremake.shared.*
 
 fun main() {
     val port = System.getenv("PORT")?.toInt() ?: 8080
     val clients = mutableSetOf<DefaultWebSocketServerSession>()
     val players = mutableMapOf<DefaultWebSocketServerSession, PlayerServer>()
+    var nextId = 1
 
     embeddedServer(Netty, port = port) {
         install(WebSockets) {
@@ -31,19 +28,30 @@ fun main() {
         routing {
             webSocket("/ws") {
                 clients.add(this)
-                val player = PlayerServer(clients.size)
+                val player = PlayerServer(nextId++)
                 players[this] = player
+
+                // Send init packet to client
+                val initPacket = InitPlayerPacket(player.id, player.x, player.y)
+                send(Json.encodeToString(InitPlayerPacket.serializer(), initPacket))
+
                 println("New client connected, total clients: ${clients.size}")
 
                 try {
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
                             val text = frame.readText()
-                            val packet = Json.decodeFromString<JoinPacket>(text)
-                            println("${packet.username} joined (server player id=${player.id})")
+                            // Try to parse InputPacket
+                            try {
+                                val inputPacket = Json.decodeFromString(InputPacket.serializer(), text)
+                                players[this]?.applyInput(inputPacket.keys, 1/60f) // example delta
+                            } catch (_: Exception) {
+                                // Could be other packet type (JoinPacket etc.)
+                            }
 
-                            // Broadcast to all clients
-                            val msg = Json.encodeToString(packet)
+                            // Broadcast all server players positions
+                            val states = players.values.map { InitPlayerPacket(it.id, it.x, it.y) }
+                            val msg = Json.encodeToString(states)
                             clients.forEach { it.send(msg) }
                         }
                     }
