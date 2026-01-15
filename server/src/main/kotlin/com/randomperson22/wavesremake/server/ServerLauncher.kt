@@ -1,4 +1,4 @@
-// server/src/main/kotlin/com/randomperson22/wavesremake/server/ServerLauncher.kt
+// WavesRemake: server/src/main/kotlin/com/randomperson22/wavesremake/server/ServerLauncher.kt
 package com.randomperson22.wavesremake.server
 
 import io.ktor.server.application.install
