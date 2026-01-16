@@ -18,7 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.TextField
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.ScreenUtils
-import com.badlogic.gdx.utils.viewport.FitViewport
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import kotlin.math.abs
 
 class MainMenuScreen(private val game: Waves) : Screen {
@@ -27,7 +27,6 @@ class MainMenuScreen(private val game: Waves) : Screen {
     private lateinit var shapeRenderer: ShapeRenderer
     private lateinit var skin: Skin
     private var loadingFinished = false
-    private lateinit var background: Texture
 
     // Splash textures (manual load)
     private lateinit var titleImage: Image
@@ -49,16 +48,12 @@ class MainMenuScreen(private val game: Waves) : Screen {
     private lateinit var multiplayer: TextButton
     private var buttonsShown = false
     private val buttonOriginalX = mutableMapOf<TextButton, Float>()
-    private lateinit var viewport: FitViewport
 
     override fun show() {
-        viewport = FitViewport(480f, 360f)
-        stage = Stage(viewport)
+        stage = Stage(ScreenViewport())
         shapeRenderer = ShapeRenderer()
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         Gdx.input.inputProcessor = stage
-
-        background = Texture("MediumModeBG.png")
 
         val vpWidth = stage.viewport.worldWidth
         val vpHeight = stage.viewport.worldHeight
@@ -105,6 +100,9 @@ class MainMenuScreen(private val game: Waves) : Screen {
         }
         stage.addActor(smallBoss2Image)
 
+        // --- Start loading everything else through AssetManager ---
+        AssetLoader.loadAll()
+
         // --- Create menu buttons but hide them ---
         createButtons(vpWidth, vpHeight)
 
@@ -115,9 +113,6 @@ class MainMenuScreen(private val game: Waves) : Screen {
         bigBossImage.touchable = Touchable.disabled
         smallBossImage.touchable = Touchable.disabled
         smallBoss2Image.touchable = Touchable.disabled
-
-        // --- Start loading everything else through AssetManager ---
-        AssetLoader.loadAll()
     }
 
     fun moveToWithSpeed(actor: Image, targetX: Float, targetY: Float, speed: Float) {
@@ -267,8 +262,11 @@ class MainMenuScreen(private val game: Waves) : Screen {
     }
 
     override fun render(delta: Float) {
-        // Black bars stay black
-        ScreenUtils.clear(0f, 0f, 0f, 1f)
+        // Clear the screen
+        ScreenUtils.clear(0f, 0.2f, 0f, 1f)
+
+        stage.act(delta)
+        stage.draw()
 
         // Update AssetManager (this drives the loading bar)
         if (!AssetLoader.manager.update()) {
@@ -282,19 +280,6 @@ class MainMenuScreen(private val game: Waves) : Screen {
             loadingFinished = true
             startAnimations()
         }
-
-        stage.batch.begin()
-        stage.batch.draw(
-            background,
-            0f,
-            0f,
-            stage.viewport.worldWidth,
-            stage.viewport.worldHeight
-        )
-        stage.batch.end()
-
-        stage.act(delta)
-        stage.draw()
     }
 
     private fun drawProgressBar(progress: Float) {
