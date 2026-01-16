@@ -1,7 +1,7 @@
 buildscript {
-  repositories {
-    gradlePluginPortal()
-  }
+    repositories {
+        gradlePluginPortal()
+    }
   dependencies {
     classpath "io.github.fourlastor:construo:2.1.0"
     if(enableGraalNative == 'true') {
@@ -121,6 +121,37 @@ tasks.register("jarWin") {
     jar.exclude("macos/arm64/**", "macos/x64/**", "linux/arm32/**", "linux/arm64/**", "linux/x64/**",
       'META-INF/INDEX.LIST', 'META-INF/maven/**')
   }
+}
+
+task fatJar(type: Jar) {
+    group = 'build'
+    description = 'Creates a runnable fat JAR including all dependencies'
+    
+    archiveClassifier.set('all') // myapp-1.0-all.jar
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+            'Main-Class': application.mainClass,
+            'Enable-Native-Access': 'ALL-UNNAMED'
+        )
+    }
+
+    // Include compiled classes
+    from(sourceSets.main.output)
+
+    // Include all runtime dependencies
+    dependsOn(configurations.runtimeClasspath)
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    // Exclude unnecessary META-INF files to prevent warnings
+    exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/maven/**')
+
+    doLast {
+        file(archiveFile).setExecutable(true, false)
+    }
 }
 
 construo {

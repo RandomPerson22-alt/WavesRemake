@@ -32,8 +32,8 @@ abstract class EnemyBase(
     protected val bounds = Rectangle()
 
     init {
-        setWidth(35f)
-        setHeight(35f)
+        setWidth(12f)
+        setHeight(12f)
 
         hitBox = Polygon(
             floatArrayOf(

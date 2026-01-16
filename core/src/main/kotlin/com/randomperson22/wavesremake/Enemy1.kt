@@ -4,15 +4,14 @@ import com.badlogic.gdx.graphics.Texture
 
 class Enemy1(
     player: Player,
-    enemyCounter: EnemyCounter,
-    loadedAssets: Map<String, Texture>
+    enemyCounter: EnemyCounter
 ) : EnemyBase(
     player,
     enemyCounter,
-    sprite1Texture = loadedAssets["enemy1.png"] ?: error("enemy1.png not loaded!"),
-    sprite2Texture = loadedAssets["enemy1Walk.png"] ?: error("enemy1Walk.png not loaded!")
+    sprite1Texture = AssetLoader.manager.get("enemy1.png", Texture::class.java),
+    sprite2Texture = AssetLoader.manager.get("enemy1Walk.png", Texture::class.java)
 ) {
-    override var moveSpeed = 250f
+    override var moveSpeed = 125f
     override var health = 5f
     override var damageAmount = 1.3f
 }

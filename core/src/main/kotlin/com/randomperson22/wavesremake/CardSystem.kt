@@ -25,6 +25,13 @@ object CardSystem {
         stage.addActor(cardPanel)
     }
 
+    fun setRandomPanelTouchable(enabled: Boolean) {
+        cardPanel.children.forEach { it.touchable =
+            if (enabled) com.badlogic.gdx.scenes.scene2d.Touchable.enabled
+            else com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+        }
+    }
+
     fun showRandomCardPanel() {
         cardPanel.clear()
         val deckCopy = Array(allCards)
@@ -52,6 +59,4 @@ object CardSystem {
         cardPanel.isVisible = false
         panelActive = false
     }
-
-    fun isPanelActive(): Boolean = panelActive
 }

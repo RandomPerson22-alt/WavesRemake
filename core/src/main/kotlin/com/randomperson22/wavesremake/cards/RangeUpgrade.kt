@@ -7,9 +7,9 @@ import com.randomperson22.wavesremake.WaveManager
 object RangeUpgrade : Card(
     name = "Range Upgrade",
     texture = createCardRect(
-        width = 120,
-        height = 200,   // taller than wide
-        color = Color.DARK_GRAY
+        width = 80,
+        height = 120,   // taller than wide
+        color = Color.LIGHT_GRAY
     ),
     onPick = Runnable {
         WaveManager.player.sword

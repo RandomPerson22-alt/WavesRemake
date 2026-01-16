@@ -60,6 +60,14 @@ object WaveManager {
         stage.addActor(initialCardPanel)
     }
 
+    fun setInitialCardsTouchable(enabled: Boolean) {
+        if (!::initialCardPanel.isInitialized) return
+        initialCardPanel.children.forEach { it.touchable =
+            if (enabled) com.badlogic.gdx.scenes.scene2d.Touchable.enabled
+            else com.badlogic.gdx.scenes.scene2d.Touchable.disabled
+        }
+    }
+
     private fun selectInitialWeapon(weapon: String) {
         initialCardPanel.isVisible = false
         when (weapon) {

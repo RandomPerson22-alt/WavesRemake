@@ -1,8 +1,8 @@
 package com.randomperson22.wavesremake
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Input
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -16,17 +16,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import com.randomperson22.wavesremake.cards.RangeUpgrade
 import com.randomperson22.wavesremake.cards.SharpnessUpgrade
 import com.randomperson22.wavesremake.cards.SpeedUpgrade
 import com.randomperson22.wavesremake.client.PlayerClient
-import com.randomperson22.wavesremake.shared.connectToServer
 import com.badlogic.gdx.utils.Array as GdxArray
 
 class EasyMode(
     private val game: Waves,
-    private val loadedAssets: Map<String, Texture> // pass the loaded textures here
 ) : Screen {
 
     private lateinit var stage: Stage
@@ -44,36 +42,32 @@ class EasyMode(
     private val maxX get() = stage.viewport.worldWidth
     private val minY get() = 0f
     private val maxY get() = stage.viewport.worldHeight
-    private var connectedToServer = false
-    private val serverUrl = "wss://wavesremake.onrender.com/ws"
     private var isPaused = false
+    private lateinit var camera: OrthographicCamera
+    private lateinit var viewport: FitViewport
 
 override fun show() {
 
     // --- Stage & Skin ---
-    stage = Stage(ScreenViewport()) // scales automatically to user screen size
+    camera = OrthographicCamera()
+    viewport = FitViewport(480f, 360f, camera)
+    stage = Stage(viewport)
     val skinHandle = Gdx.files.internal("ui/uiskin.json")
     skin = Skin(skinHandle)
 
     // --- Background ---
-    background = loadedAssets["EasyModeBG.png"] ?: error("Texture EasyModeBG.png not found!")
+    background = AssetLoader.manager.get("EasyModeBG.png", Texture::class.java)
 
     vpWidth = stage.viewport.worldWidth
     vpHeight = stage.viewport.worldHeight
 
 // --- Player ---
-    player = PlayerClient(
-        id = 1,
-        loadedAssets = loadedAssets
-    ).apply {
-        width = 40f
-        height = 43f
-        setPosition(vpWidth / 2f - width / 2f, 50f)
-    }
+    player = PlayerClient(id = 1)
+    player.setPosition(vpWidth / 2f - player.width / 2f, 50f) // just position, no size
     stage.addActor(player)
 
 // --- Sword ---
-    sword = Sword(player, stage, loadedAssets["sword.png"] ?: error("sword.png not loaded!"))
+    sword = Sword(player, stage, AssetLoader.manager.get("sword.png", Texture::class.java))
     sword.isEquipped = false
     sword.isVisible = false
     stage.addActor(sword)
@@ -111,25 +105,28 @@ override fun show() {
 
     val waves = EasyWaves.create(
         player,
-        enemyCounter,
-        loadedAssets
+        enemyCounter
     )
 
     WaveManager.setupWaves(waves)
 
     // --- Pause Button ---
-    val pauseTexture = loadedAssets["pausebutton.png"] ?: error("Texture pausebutton.png not found!")
+    val pauseTexture = AssetLoader.manager.get("pausebutton.png", Texture::class.java)
     pauseButton = ImageButton(TextureRegionDrawable(TextureRegion(pauseTexture)))
     pauseButton.setPosition(
         0f + -2f, // distance from left edge
-        stage.viewport.worldHeight - pauseButton.height - -310f // distance from top
+        stage.viewport.worldHeight - pauseButton.height - -365f // distance from top
     )
-    pauseButton.setSize(95f, 98f)
+    pauseButton.setSize(31f, 41f)
     stage.addActor(pauseButton)
     pauseButton.addListener(object : ClickListener() {
         override fun clicked(event: InputEvent?, x: Float, y: Float) {
             isPaused = true
             pauseMenuTable.isVisible = true
+
+            // Disable everything in the background
+            WaveManager.setInitialCardsTouchable(false)
+            CardSystem.setRandomPanelTouchable(false) // disable upgrade cards
         }
     })
 
@@ -171,6 +168,10 @@ override fun show() {
         override fun clicked(event: InputEvent?, x: Float, y: Float) {
             isPaused = false
             pauseMenuTable.isVisible = false
+
+            // Re-enable everything
+            WaveManager.setInitialCardsTouchable(true)
+            CardSystem.setRandomPanelTouchable(true) // disable upgrade cards
         }
     })
 
@@ -183,12 +184,7 @@ override fun show() {
 }
 
     override fun render(delta: Float) {
-        ScreenUtils.clear(0f, 0.2f, 0f, 1f)
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.L) && !connectedToServer) {
-            connectToServer(player, serverUrl)
-            connectedToServer = true
-        }
+        ScreenUtils.clear(0f, 0f, 0f, 1f)
 
         stage.batch.begin()
         stage.batch.draw(background, 0f, 0f, vpWidth, vpHeight)
@@ -215,7 +211,7 @@ override fun show() {
     }
 
     override fun resize(width: Int, height: Int) {
-        stage.viewport.update(width, height, true)
+        viewport.update(width, height, true)
     }
 
     override fun dispose() {

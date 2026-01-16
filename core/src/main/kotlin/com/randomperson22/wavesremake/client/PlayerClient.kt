@@ -5,8 +5,10 @@ import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Vector2
+import com.randomperson22.wavesremake.AssetLoader
 import com.randomperson22.wavesremake.Player
 import com.randomperson22.wavesremake.shared.InputPacket
+import com.randomperson22.wavesremake.shared.PositionPacket
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.websocket.send
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -14,20 +16,14 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
-    init {
-        x = 100f
-        y = 100f
-        width = 40f
-        height = 43f
-    }
+class PlayerClient(id: Int) : Player(id) {
 
     private val walkTextures: Array<Texture> = Array(6) { i ->
-        loadedAssets["PlayerWalk${i + 1}.png"] ?: error("PlayerWalk${i + 1}.png not loaded!")
+        AssetLoader.manager.get("PlayerWalk${i + 1}.png", Texture::class.java)
     }
 
     private val stopTextures: Array<Texture> = Array(2) { i ->
-        loadedAssets["PlayerStop${i + 1}.png"] ?: error("PlayerStop${i + 1}.png not loaded!")
+        AssetLoader.manager.get("PlayerStop${i + 1}.png", Texture::class.java)
     }
 
     private var walkAnimTimer = 0f
@@ -36,34 +32,44 @@ class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
     private var idleFrame = 0
     private val walkFrameDuration = 0.1f
     private val idleFrameDuration = 0.5f
-    private val dashSpeed = 600f
-    private val maxDashDistance = 150f
+    private val dashSpeed = 300f
+    private val maxDashDistance = 75f
     var controlledByServer = false
     var serverId: Int? = null
     private var wsSession: DefaultClientWebSocketSession? = null
-
-    init {
-        width = 40f
-        height = 43f
-        setPosition(x, y)
-    }
 
     fun setWebSocket(session: DefaultClientWebSocketSession) {
         wsSession = session
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    fun sendInitialPosition() {
+        wsSession?.let {
+            GlobalScope.launch {
+                it.send(Json.encodeToString(PositionPacket.serializer(), PositionPacket(x, y)))
+            }
+        }
+    }
+
     override fun act(delta: Float) {
         if (controlledByServer) {
+            // Send input to server
             sendInputToServer()
-            // Only update animation based on the current moving state
-            updateAnimation(delta)
-            return
-        }
 
-        super.act(delta)
-        handleDash(delta)
-        handleMovement(delta)
-        updateAnimation(delta)
+            // Still update local animation and movement for visual feedback
+            handleDash(delta)       // optional: dash feedback
+            handleMovement(delta)   // optional: local fake movement
+            updateAnimation(delta)
+
+            // But don't actually "commit" the movement as authoritative
+            // The server will send the true x/y, which we should interpolate to
+        } else {
+            // Singleplayer mode: client is fully authoritative
+            super.act(delta)
+            handleDash(delta)
+            handleMovement(delta)
+            updateAnimation(delta)
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -107,6 +113,8 @@ class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
     private fun handleMovement(delta: Float) {
         var dx = 0f
         var dy = 0f
+        val wasMoving = moving
+        moving = false // reset at start
 
         if (Gdx.input.isKeyPressed(Input.Keys.W)) { dy += speed * delta; moving = true }
         if (Gdx.input.isKeyPressed(Input.Keys.S)) { dy -= speed * delta; moving = true }
@@ -114,8 +122,17 @@ class PlayerClient(id: Int, loadedAssets: Map<String, Texture>) : Player(id) {
         if (Gdx.input.isKeyPressed(Input.Keys.D)) { dx += speed * delta; moving = true }
 
         moveBy(dx, dy)
-        x = this.x
-        y = this.y
+
+        // Reset timers if state changed
+        if (moving != wasMoving) {
+            if (moving) {
+                idleAnimTimer = 0f
+                idleFrame = 0
+            } else {
+                walkAnimTimer = 0f
+                walkFrame = 0
+            }
+        }
     }
 
     private fun updateAnimation(delta: Float) {

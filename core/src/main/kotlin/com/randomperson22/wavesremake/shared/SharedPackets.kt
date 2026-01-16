@@ -20,3 +20,5 @@ data class InputPacket(
 data class JoinPacket(
     val username: String
 )
+@Serializable
+data class PositionPacket(val x: Float, val y: Float)

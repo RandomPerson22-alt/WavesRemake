@@ -6,7 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 open class Player(val id: Int) : Actor() {
     var maxHealth = 100f
     var health = maxHealth
-    var speed = 500f
+    var speed = 150f
     var hasSword = false
     var moving = false
 
@@ -15,6 +15,11 @@ open class Player(val id: Int) : Actor() {
     data class DashState(val dir: Vector2, val remaining: Float)
     var dash: DashState? = null
 
+    init {
+        width = 20f
+        height = 22f
+    }
+
     fun equipSword(s: Sword) {
         sword = s
         hasSword = true
@@ -22,6 +27,7 @@ open class Player(val id: Int) : Actor() {
 
     // Position helper for server/client
     override fun setPosition(newX: Float, newY: Float) {
+        super.setPosition(newX, newY) // keep Scene2D happy
         x = newX
         y = newY
     }

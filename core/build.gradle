@@ -23,23 +23,3 @@ dependencies {
   implementation "io.ktor:ktor-client-content-negotiation:2.3.4"
   implementation "io.ktor:ktor-serialization-kotlinx-json:2.3.4"
 }
-tasks.register("fakePlayerJar", Jar) {
-  group = "build"
-  archiveFileName.set("FakePlayer.jar")
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-  manifest {
-    attributes(
-      "Main-Class": "com.randomperson22.wavesremake.client.FakePlayerKt"
-    )
-  }
-
-  from sourceSets.main.output
-  dependsOn configurations.runtimeClasspath
-
-  from {
-    configurations.runtimeClasspath.collect {
-      it.isDirectory() ? it : zipTree(it)
-    }
-  }
-}

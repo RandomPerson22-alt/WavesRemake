@@ -15,6 +15,7 @@ object AssetLoader {
         "PlayerStop1.png",
         "PlayerStop2.png",
         "EasyModeBG.png",
+        "MediumModeBG.png",
         "WavesRemakeTitle.png",
         "pausebutton.png",
         "sword.png",
@@ -32,9 +33,5 @@ object AssetLoader {
         for (file in texturesToLoad) {
             manager.load(file, Texture::class.java)
         }
-    }
-
-    fun dispose() {
-        manager.dispose()
     }
 }

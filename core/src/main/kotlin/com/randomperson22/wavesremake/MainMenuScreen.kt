@@ -9,14 +9,16 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.ui.TextField
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.ScreenUtils
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import kotlin.math.abs
 
 class MainMenuScreen(private val game: Waves) : Screen {
@@ -25,7 +27,7 @@ class MainMenuScreen(private val game: Waves) : Screen {
     private lateinit var shapeRenderer: ShapeRenderer
     private lateinit var skin: Skin
     private var loadingFinished = false
-    private lateinit var loadedTextures: MutableMap<String, Texture>
+    private lateinit var background: Texture
 
     // Splash textures (manual load)
     private lateinit var titleImage: Image
@@ -44,13 +46,19 @@ class MainMenuScreen(private val game: Waves) : Screen {
     // UI buttons fade in later
     private lateinit var buttonTable: Table
     private lateinit var quitButton: TextButton
+    private lateinit var multiplayer: TextButton
     private var buttonsShown = false
+    private val buttonOriginalX = mutableMapOf<TextButton, Float>()
+    private lateinit var viewport: FitViewport
 
     override fun show() {
-        stage = Stage(ScreenViewport())
+        viewport = FitViewport(480f, 360f)
+        stage = Stage(viewport)
         shapeRenderer = ShapeRenderer()
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         Gdx.input.inputProcessor = stage
+
+        background = Texture("MediumModeBG.png")
 
         val vpWidth = stage.viewport.worldWidth
         val vpHeight = stage.viewport.worldHeight
@@ -97,14 +105,19 @@ class MainMenuScreen(private val game: Waves) : Screen {
         }
         stage.addActor(smallBoss2Image)
 
-        // --- Start loading everything else through AssetManager ---
-        AssetLoader.loadAll()
-
         // --- Create menu buttons but hide them ---
         createButtons(vpWidth, vpHeight)
 
         playerImage.toFront() // bring player in front of everything
         bigBossImage.toBack() // push big boss behind everything
+
+        playerImage.touchable = Touchable.disabled // Make them all not blocking buttons
+        bigBossImage.touchable = Touchable.disabled
+        smallBossImage.touchable = Touchable.disabled
+        smallBoss2Image.touchable = Touchable.disabled
+
+        // --- Start loading everything else through AssetManager ---
+        AssetLoader.loadAll()
     }
 
     fun moveToWithSpeed(actor: Image, targetX: Float, targetY: Float, speed: Float) {
@@ -124,6 +137,7 @@ class MainMenuScreen(private val game: Waves) : Screen {
         listOf(easy, med, hard).forEach {
             it.label.setFontScale(3f)
             it.label.color = Color.WHITE
+            buttonOriginalX[it] = it.x   // store original X
         }
 
         buttonTable = Table().apply {
@@ -136,11 +150,105 @@ class MainMenuScreen(private val game: Waves) : Screen {
 
         stage.addActor(buttonTable)
 
+        multiplayer = TextButton("Play With Friends?", skin).apply {
+            label.setFontScale(2f)
+            setSize(buttonWidth, buttonHeight)
+            setPosition(vpWidth * 0.76f, vpHeight * 0.30f)
+            color.a = 0f // start fully transparent
+            isVisible = false
+        }
+        stage.addActor(multiplayer)
+
+// Multiplayer overlay table
+        val mpTable = Table().apply {
+            setFillParent(true)
+            center()
+            isVisible = false
+        }
+        stage.addActor(mpTable)
+
+// Host and Join buttons
+        val hostButton = TextButton("Host Room", skin)
+        val joinButton = TextButton("Join Room", skin)
+        val codeField = TextField("", skin)
+        codeField.messageText = "Enter room code"
+
+        mpTable.add(hostButton).width(buttonWidth).height(buttonHeight).pad(10f).row()
+        mpTable.add(joinButton).width(buttonWidth).height(buttonHeight).pad(10f).row()
+        mpTable.add(codeField).width(buttonWidth).height(buttonHeight).pad(10f)
+
+        fun showMultiplayerMenu() {
+            // Make them non touch
+            mpTable.children.forEach { it.touchable = Touchable.enabled }
+            buttonTable.children.forEach { it.touchable = Touchable.disabled }
+            quitButton.touchable = Touchable.disabled
+            multiplayer.touchable = Touchable.disabled
+            // Fade them out
+            buttonTable.children.forEach { it.addAction(Actions.fadeOut(0.5f)) }
+            quitButton.addAction(Actions.fadeOut(0.5f))
+            multiplayer.addAction(Actions.fadeOut(0.5f))
+
+            // Move title up 30f
+            titleImage.addAction(Actions.moveBy(0f, 200f, 0.4f))
+
+            // Fade out background sprites (already non-touchable)
+            listOf(playerImage, bigBossImage, smallBossImage, smallBoss2Image).forEach { img ->
+                img.addAction(Actions.fadeOut(0.5f))
+            }
+
+            // Show multiplayer overlay and fade it in
+            mpTable.isVisible = true
+            mpTable.color.a = 0f
+            mpTable.addAction(Actions.fadeIn(0.5f))
+        }
+
+        fun hideMultiplayerMenu() {
+            // Make main menu buttons and quit button touchable again
+            mpTable.children.forEach { it.touchable = Touchable.disabled }
+            buttonTable.children.forEach { it.touchable = Touchable.enabled }
+            quitButton.touchable = Touchable.enabled
+            multiplayer.touchable = Touchable.enabled
+            // fade them out
+            buttonTable.children.forEach { it.addAction(Actions.fadeIn(0.2f)) }
+            quitButton.addAction(Actions.fadeIn(0.5f))
+            multiplayer.addAction(Actions.fadeIn(0.5f))
+
+            // Move title back down 30f
+            titleImage.addAction(Actions.moveBy(0f, -200f, 0.4f))
+
+            // Fade background sprites back in
+            listOf(playerImage, bigBossImage, smallBossImage, smallBoss2Image).forEach { img ->
+                img.addAction(Actions.fadeIn(0.5f))
+            }
+
+            // Fade out multiplayer overlay
+            mpTable.addAction(
+                Actions.sequence(
+                    Actions.fadeOut(0.5f),
+                    Actions.run { mpTable.isVisible = false }
+                )
+            )
+        }
+
+        multiplayer.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                showMultiplayerMenu()
+            }
+        })
+
+        val backButton = TextButton("Back", skin)
+        mpTable.add(backButton).width(buttonWidth).height(buttonHeight).pad(10f).row()
+        backButton.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                hideMultiplayerMenu()
+            }
+        })
+
         quitButton = TextButton("Quit", skin).apply {
             label.setFontScale(3f)
             label.color = Color.WHITE
             setSize(buttonWidth, buttonHeight)
-            setPosition(vpWidth * 0.76f, vpHeight * 0.13f)
+            setPosition(vpWidth * 0.76f, vpHeight * 0.10f)
             isVisible = false
             addListener(object : ClickListener() {
                 override fun clicked(event: InputEvent?, x: Float, y: Float) {
@@ -153,34 +261,38 @@ class MainMenuScreen(private val game: Waves) : Screen {
         easy.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent?, x: Float, y: Float) {
                 clickSound.play()
-                game.setScreen(EasyMode(game, loadedTextures))
+                game.setScreen(EasyMode(game))
             }
         })
     }
 
     override fun render(delta: Float) {
-        // Clear the screen
-        ScreenUtils.clear(0f, 0.2f, 0f, 1f)
+        // Black bars stay black
+        ScreenUtils.clear(0f, 0f, 0f, 1f)
 
-        // Update the AssetManager; returns false until everything is loaded
+        // Update AssetManager (this drives the loading bar)
         if (!AssetLoader.manager.update()) {
-            // Still loading → show the progress bar
+            // Still loading
             drawProgressBar(AssetLoader.manager.progress)
-        } else if (!loadingFinished) {
-            // First frame after loading finishes
+            return
+        }
+
+        // Assets are fully loaded — run once
+        if (!loadingFinished) {
             loadingFinished = true
-
-            // Grab all textures from AssetManager into a map
-            loadedTextures = hashMapOf()
-            for (file in AssetLoader.texturesToLoad) {
-                loadedTextures[file] = AssetLoader.manager.get(file, Texture::class.java)
-            }
-
-            // Start any animations or transitions
             startAnimations()
         }
 
-        // Update and draw the stage/UI
+        stage.batch.begin()
+        stage.batch.draw(
+            background,
+            0f,
+            0f,
+            stage.viewport.worldWidth,
+            stage.viewport.worldHeight
+        )
+        stage.batch.end()
+
         stage.act(delta)
         stage.draw()
     }
@@ -254,9 +366,12 @@ class MainMenuScreen(private val game: Waves) : Screen {
 
         buttonTable.isVisible = true
         quitButton.isVisible = true
+        multiplayer.isVisible = true  // make multiplayer button visible
 
+        // Fade in all buttons
         buttonTable.addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(1f)))
         quitButton.addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(1f)))
+        multiplayer.addAction(Actions.sequence(Actions.alpha(0f), Actions.fadeIn(1f)))  // include multiplayer
     }
 
     override fun dispose() {
@@ -266,7 +381,10 @@ class MainMenuScreen(private val game: Waves) : Screen {
         clickSound.dispose()
     }
 
-    override fun resize(width: Int, height: Int) {}
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
+    }
+
     override fun hide() {}
     override fun pause() {}
     override fun resume() {}

@@ -10,9 +10,10 @@ import com.badlogic.gdx.math.Polygon
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.randomperson22.wavesremake.client.PlayerClient
 
 class Sword(
-    private val player: Player,
+    private val player: PlayerClient,
     private val stage: Stage,
     private val texture: Texture
 ) : Actor() {
@@ -21,7 +22,7 @@ class Sword(
     private val enemiesHitThisSwing = mutableSetOf<EnemyBase>()
     var isEquipped = false
     var damage = 2.5f
-    var radius: Float = 65f
+    var radius: Float = 32f
 
     // Hitbox now matches the sprite size
     private var hitBox: Polygon = Polygon(floatArrayOf(
@@ -35,8 +36,8 @@ class Sword(
 
     init {
         // Set your desired in-game size
-        width = 67f   // how big the sword appears in the game
-        height = 27f
+        width = 31f   // how big the sword appears in the game
+        height = 12f
         setOrigin(width / 2f, height / 2f)
 
         // Hitbox matches the displayed size
@@ -80,14 +81,13 @@ class Sword(
         for (actor in stage.actors) {
             if (actor === this || actor === player) continue
             if (actor is EnemyBase) {
-                val enemy = actor
-                if (Intersector.overlapConvexPolygons(hitBox, enemy.getHitPolygon())) {
-                    if (!enemiesHitThisSwing.contains(enemy)) {
-                        enemy.takeDamage(damage)
-                        enemiesHitThisSwing.add(enemy)
+                if (Intersector.overlapConvexPolygons(hitBox, actor.getHitPolygon())) {
+                    if (!enemiesHitThisSwing.contains(actor)) {
+                        actor.takeDamage(damage)
+                        enemiesHitThisSwing.add(actor)
                     }
                 } else {
-                    enemiesHitThisSwing.remove(enemy)
+                    enemiesHitThisSwing.remove(actor)
                 }
             }
         }
