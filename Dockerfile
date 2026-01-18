@@ -5,7 +5,7 @@ COPY . .
 RUN gradle :server:fatJar --no-daemon
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:1.8-jdk-alpine
 WORKDIR /app
 
 # Correct path: server module output

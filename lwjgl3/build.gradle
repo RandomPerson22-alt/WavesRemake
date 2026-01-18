@@ -126,7 +126,7 @@ tasks.register("jarWin") {
 task fatJar(type: Jar) {
     group = 'build'
     description = 'Creates a runnable fat JAR including all dependencies'
-    
+
     archiveClassifier.set('all') // myapp-1.0-all.jar
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 

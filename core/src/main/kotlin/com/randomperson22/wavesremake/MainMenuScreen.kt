@@ -15,10 +15,13 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.TextField
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.randomperson22.wavesremake.client.PlayerClient
+import com.randomperson22.wavesremake.shared.connectToServer
 import kotlin.math.abs
 
 class MainMenuScreen(private val game: Waves) : Screen {
@@ -34,6 +37,7 @@ class MainMenuScreen(private val game: Waves) : Screen {
     private lateinit var bigBossImage: Image
     private lateinit var smallBossImage: Image
     private lateinit var smallBoss2Image: Image
+    private lateinit var statusLabel: Label
 
     // Original stuff only for animations
     private lateinit var bigBossOriginalPos: Vector2
@@ -231,6 +235,60 @@ class MainMenuScreen(private val game: Waves) : Screen {
             }
         })
 
+        val disconnectButton = TextButton("Disconnect", skin).apply {
+            label.setFontScale(2f)
+            isVisible = false        // start hidden
+            isDisabled = true        // definitely not clickable
+        }
+        mpTable.row()
+        mpTable.add(disconnectButton).width(300f).height(70f).pad(10f)
+
+        statusLabel = Label("", skin).apply {
+            setFontScale(2f)
+            color = Color.BLUE
+        }
+        mpTable.row()
+        mpTable.add(statusLabel).pad(10f)
+
+        hostButton.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                clickSound.play()
+
+                println("🌐 Connecting to multiplayer server...")
+
+                val dummyPlayer = PlayerClient(id = -1)
+
+                // Disable host, show disconnect
+                hostButton.isDisabled = true
+                hostButton.color.a = 0.5f
+                disconnectButton.isVisible = true
+                disconnectButton.isDisabled = false
+
+                // --- NEW: pass callback ---
+                connectToServer(dummyPlayer, "wss://wavesremake.onrender.com/ws") { roomCode ->
+                    // show text on screen
+                    statusLabel.setText("✅ Connected!\nRoom Code: $roomCode")
+                    Waves.NetworkState.connected = true
+                    Waves.NetworkState.roomCode = roomCode
+                }
+            }
+        })
+
+        disconnectButton.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent?, x: Float, y: Float) {
+                println("🔌 Disconnecting from server...")
+
+                // TODO: actually close the websocket connection here later
+                Waves.NetworkState.connected = false
+
+                // Reset UI
+                hostButton.isDisabled = false
+                hostButton.color.a = 1f
+                disconnectButton.isVisible = false
+                disconnectButton.isDisabled = true
+            }
+        })
+
         val backButton = TextButton("Back", skin)
         mpTable.add(backButton).width(buttonWidth).height(buttonHeight).pad(10f).row()
         backButton.addListener(object : ClickListener() {
@@ -267,6 +325,12 @@ class MainMenuScreen(private val game: Waves) : Screen {
 
         stage.act(delta)
         stage.draw()
+
+        if (Waves.NetworkState.connected) {
+            statusLabel.setText(
+                "Connected!\nRoom Code: ${Waves.NetworkState.roomCode}"
+            )
+        }
 
         // Update AssetManager (this drives the loading bar)
         if (!AssetLoader.manager.update()) {
@@ -368,6 +432,10 @@ class MainMenuScreen(private val game: Waves) : Screen {
 
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
+    }
+
+    fun generateRoomCode(): String {
+        return (10000..99999).random().toString()
     }
 
     override fun hide() {}

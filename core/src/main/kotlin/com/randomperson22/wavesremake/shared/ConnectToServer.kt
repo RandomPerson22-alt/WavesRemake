@@ -9,7 +9,11 @@ import io.ktor.websocket.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 
-fun connectToServer(player: PlayerClient, serverUrl: String) {
+fun connectToServer(
+    player: PlayerClient,
+    serverUrl: String,
+    onConnected: (roomCode: String) -> Unit
+) {
     val client = HttpClient(CIO) {
         install(WebSockets)
     }
@@ -19,6 +23,14 @@ fun connectToServer(player: PlayerClient, serverUrl: String) {
             println("✅ Connected to server")
 
             player.setWebSocket(this)
+
+            // Generate random 5-digit room code
+            val roomCode = (10000..99999).random().toString()
+
+            // Call callback on LibGDX thread
+            Gdx.app.postRunnable {
+                onConnected(roomCode)
+            }
 
             // --- Wait for init packet ---
             val firstFrame = incoming.receive()
