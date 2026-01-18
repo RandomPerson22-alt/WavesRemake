@@ -1,3 +1,4 @@
+//WavesRemake: core/scr/main/kotlin/com/randomperson22/wavesremake/shared/ConectToServer.kt
 package com.randomperson22.wavesremake.shared
 
 import com.badlogic.gdx.Gdx

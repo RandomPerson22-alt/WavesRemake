@@ -1,3 +1,4 @@
+//WavesRemake: core/src/main/kotlin/com/randomperson22/wavesremake/client/PlayerClient.kt
 package com.randomperson22.wavesremake.client
 
 import com.badlogic.gdx.Gdx
