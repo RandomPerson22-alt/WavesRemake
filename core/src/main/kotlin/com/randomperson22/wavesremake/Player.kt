@@ -24,4 +24,10 @@ open class Player(val id: Int) : Actor() {
         sword = s
         hasSword = true
     }
+
+        override fun setPosition(newX: Float, newY: Float) {
+        super.setPosition(newX, newY) // keep Scene2D happy
+        x = newX
+        y = newY
+    }
 }
