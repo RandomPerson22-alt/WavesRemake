@@ -67,7 +67,7 @@ override fun show() {
     stage.addActor(player)
 
 // --- Sword ---
-    sword = Sword(player, stage, AssetLoader.manager.get("sword.png", Texture::class.java))
+    sword = Sword(player)
     sword.isEquipped = false
     sword.isVisible = false
     stage.addActor(sword)
