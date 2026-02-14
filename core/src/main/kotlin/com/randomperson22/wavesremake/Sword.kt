@@ -13,34 +13,25 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.randomperson22.wavesremake.client.PlayerClient
 
 class Sword(
-    private val player: PlayerClient,
-    private val stage: Stage,
-    private val texture: Texture
+    private val player: PlayerClient
 ) : Actor() {
 
+    private val texture = AssetLoader.manager.get("sword.png", Texture::class.java)
     private val shapeRenderer: ShapeRenderer? = if (DEBUG) ShapeRenderer() else null
     private val enemiesHitThisSwing = mutableSetOf<EnemyBase>()
     var isEquipped = false
     var damage = 2.5f
     var radius: Float = 32f
 
-    // Hitbox now matches the sprite size
-    private var hitBox: Polygon = Polygon(floatArrayOf(
-        0f, 0f,
-        width, 0f,
-        width, height,
-        0f, height
-    ))
+    private var hitBox: Polygon
 
     companion object { private const val DEBUG = true }
 
     init {
-        // Set your desired in-game size
-        width = 31f   // how big the sword appears in the game
+        width = 31f
         height = 12f
         setOrigin(width / 2f, height / 2f)
 
-        // Hitbox matches the displayed size
         hitBox = Polygon(floatArrayOf(
             0f, 0f,
             width, 0f,
@@ -52,7 +43,7 @@ class Sword(
 
     override fun act(delta: Float) {
         super.act(delta)
-        if (!isEquipped) return
+        if (!isEquipped || stage == null) return
 
         followMouse()
         updateHitbox()
